@@ -5,6 +5,7 @@ import copy
 import sys
 import time
 import Gnuplot, Gnuplot.funcutils
+import cProfile
 
 #=========
 # Loading
@@ -39,7 +40,7 @@ with open('input_codon_scores', 'r') as f:
 
 # Load the example DNA sequence, store initial sequence for comparison later
 initSeq = []
-with open('seq_polio', 'r') as f:
+with open('seq_gfp', 'r') as f:
     next(f)
     for line in f:
         line = line.rstrip('\n')
@@ -193,10 +194,10 @@ def calcScore(solution):
 NUM_GENS = 100000 # Generations
 NUM_SOLS_PER_GEN = 10 # solutions per generation
 NUM_CROSSPOINTS = 2 # crossover points
-NUM_SELECTIONS = 3 # Top solutions survive each generation
-NUM_CHILDREN = 5 # children are created from those
+NUM_SELECTIONS = int(round(0.3 * NUM_SOLS_PER_GEN)) # Top solutions survive each generation
+NUM_CHILDREN = int(round(0.6 * NUM_SOLS_PER_GEN)) # children are created from those
 NUM_RANDOM = NUM_SOLS_PER_GEN - (NUM_SELECTIONS + NUM_CHILDREN) # random solutions fill in the gaps
-MUTATION_AMOUNT = 0.01 # Mutate everything that we bring over a bit
+MUTATION_AMOUNT = 0.012 # Mutate everything that we bring over a bit
 NUM_PRESERVE = 1 # Prevent the algorithm from mutating the best-performing solution(s). While unrealistic, it prevents us from going backwards.
 
 
@@ -229,79 +230,83 @@ def newGeneration(pool):
     return newGen
 
 
-#for tv in arange(0.00, 0.20, 0.01):
-#    MUTATION_AMOUNT = tv
+def doTest():
+    start = time.time() # Measure elapsed time
 
-start = time.time() # Measure elapsed time
+    # Store the best solution, this will be the output.
+    bestSolution = None
 
-# Store the best solution, this will be the output.
-bestSolution = None
+    # store average scores and best scores of each generation
+    averageScores = []
+    bestScores = []
 
-# store average scores and best scores of each generation
-averageScores = []
-bestScores = []
-
-# Generate initial population
-pool = [generateRandomSolution(probInfo) for x in range(NUM_SOLS_PER_GEN)]
-
-poolScores = map(calcScore, pool)
-averageScores.append(sum(poolScores) / float(len(poolScores)))
-bestScores.append(sorted(poolScores)[0])
-
-for i in range(NUM_GENS):
-    sys.stdout.write('\rComplete: %g%%' % round(100 * (i+1) / float(NUM_GENS), 2) + (' '*6))
-    sys.stdout.flush()
-
-    pool = newGeneration(pool)
-
-    # Save best solution
-    curBestSolution = sorted(pool, key=calcScore)[0]
-    if bestSolution == None or calcScore(curBestSolution) < calcScore(bestSolution):
-        bestSolution = curBestSolution
+    # Generate initial population
+    pool = [generateRandomSolution(probInfo) for x in range(NUM_SOLS_PER_GEN)]
 
     poolScores = map(calcScore, pool)
     averageScores.append(sum(poolScores) / float(len(poolScores)))
     bestScores.append(sorted(poolScores)[0])
 
-end = time.time()
+    for i in range(NUM_GENS):
+        sys.stdout.write('\rComplete: %g%%' % round(100 * (i+1) / float(NUM_GENS), 2) + (' '*6))
+        sys.stdout.flush()
+
+        pool = newGeneration(pool)
+
+        # Save best solution
+        curBestSolution = sorted(pool, key=calcScore)[0]
+        if bestSolution == None or calcScore(curBestSolution) < calcScore(bestSolution):
+            bestSolution = curBestSolution
+
+        poolScores = map(calcScore, pool)
+        averageScores.append(sum(poolScores) / float(len(poolScores)))
+        bestScores.append(sorted(poolScores)[0])
+
+    end = time.time()
 
 
-#=========
-# Output
-#=========
+    #=========
+    # Output
+    #=========
 
-print '\n' + str(NUM_GENS) + ' generations in ' + str(round(end - start, 2)) + ' seconds [' + str(round(NUM_GENS / (end-start), 1)) + ' generations per second]'
+    print '\n' + str(NUM_GENS) + ' generations in ' + str(round(end - start, 2)) + ' seconds [' + str(round(NUM_GENS / (end-start), 1)) + ' generations per second]'
 
-# Outputting to text file
-with open('output/ga_[' + ','.join(map(str,[NUM_GENS,NUM_SOLS_PER_GEN,NUM_CROSSPOINTS,NUM_SELECTIONS,NUM_CHILDREN,NUM_RANDOM,MUTATION_AMOUNT,NUM_PRESERVE])) + '].txt', 'w') as f:
-    f.write('Best sequence [' + str(calcScore(bestSolution)) + ']:\n' + ''.join(bestSolution) + '\n\n')
-    f.write('Initial sequence [' + str(calcScore(initSeq)) + ']:\n' + ''.join(initSeq) + '\n\n')
+    outputFileName = ', '.join(map(str,[NUM_GENS,NUM_SOLS_PER_GEN,NUM_CROSSPOINTS,NUM_SELECTIONS,NUM_CHILDREN,NUM_RANDOM,MUTATION_AMOUNT,NUM_PRESERVE]))
 
-    #f.write('Gen\tAvg\tBest\n')
-    #for i in range(NUM_GENS + 1):
-    #    f.write(str(i) + '\t' + str(averageScores[i]) + '\t' + str(bestScores[i]) + '\n')
+    # Outputting to text file
+    with open('output/' + outputFileName + '.txt', 'w') as f:
+        f.write('Best sequence [' + str(calcScore(bestSolution)) + ']:\n' + ''.join(bestSolution) + '\n\n')
+        f.write('Initial sequence [' + str(calcScore(initSeq)) + ']:\n' + ''.join(initSeq) + '\n\n')
 
-
-# Graphing with Gnuplot
-g = Gnuplot.Gnuplot(debug=0, persist=0)
-g.title('GA Performance [' + ', '.join(map(str,[NUM_GENS,NUM_SOLS_PER_GEN,NUM_CROSSPOINTS,NUM_SELECTIONS,NUM_CHILDREN,NUM_RANDOM,MUTATION_AMOUNT,NUM_PRESERVE])) + ']')
-g('set xlabel "Generation #"')
-g('set ylabel "Score"')
-g('set xrange [:' + str(NUM_GENS) + ']')
-#g('set yrange [-400:-20]')
-g('set logscale x')
-
-g('set terminal png')
-
-g('set style data steps')
-
-best = Gnuplot.Data(zip(range(0, len(bestScores)), bestScores), title='Best Score')
-avg = Gnuplot.Data(zip(range(0, len(averageScores)), averageScores), title='Average Score')
-
-g.plot(best, avg)
-g.hardcopy('output/ga_[' + ','.join(map(str,[NUM_GENS,NUM_SOLS_PER_GEN,NUM_CROSSPOINTS,NUM_SELECTIONS,NUM_CHILDREN,NUM_RANDOM,MUTATION_AMOUNT,NUM_PRESERVE])) + '].png', terminal='png')
-
-g.close()
+        #f.write('Gen\tAvg\tBest\n')
+        #for i in range(NUM_GENS + 1):
+        #    f.write(str(i) + '\t' + str(averageScores[i]) + '\t' + str(bestScores[i]) + '\n')
 
 
-raw_input('Please press return to continue...\n')
+    # Graphing with Gnuplot
+    g = Gnuplot.Gnuplot(debug=0, persist=0)
+    g.title('GA Performance [' + ', '.join(map(str,[NUM_GENS,NUM_SOLS_PER_GEN,NUM_CROSSPOINTS,NUM_SELECTIONS,NUM_CHILDREN,NUM_RANDOM,MUTATION_AMOUNT,NUM_PRESERVE])) + ']')
+    g('set xlabel "Generation #"')
+    g('set ylabel "Score"')
+    g('set xrange [:' + str(NUM_GENS) + ']')
+    g('set yrange [-70:0]')
+    g('set logscale x')
+
+    g('set terminal png')
+
+    g('set style data steps')
+
+    best = Gnuplot.Data(zip(range(0, len(bestScores)), bestScores), title='Best Score')
+    avg = Gnuplot.Data(zip(range(0, len(averageScores)), averageScores), title='Average Score')
+
+    g.plot(best, avg)
+    g.hardcopy('output/' + outputFileName + '.png', terminal='png')
+
+    g.close()
+
+
+    raw_input('Please press return to continue...\n')
+
+
+# Profiling
+cProfile.run('doTest()')
