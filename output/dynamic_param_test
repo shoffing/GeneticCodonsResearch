@@ -1,0 +1,23 @@
+Constant Parameters:
+    [-266.935979398, -258.551599397, -263.491370044, -264.213962197, -268.760971697]
+    Median: -264.21
+
+
+Interpolated Parameters (x):
+    [-342.603663457, -317.087009614, -331.914091222, -334.838625534, -327.131441754]
+    Median: -331.91
+
+
+Interpolated Parameters (x^2):
+    [-314.80167628, -301.454292442, -310.013363322, -306.485927587, -308.29050068]
+    Median: -308.29
+
+Interpolated Parameters (x^0.5):
+    [-359.755424889, -354.781373255, -362.743138471, -364.635918647, -365.149897864]
+    Median: -362.74
+
+Interpolated Parameters (x^0.25):
+    [-386.026209907, -396.877851367, -392.429350246, -388.268285851, -397.485410511]
+    Median: -392.43
+
+I decided to stick with x^0.5 for the big test, because I worry that even though x^0.25 provides better results initially, it might not be spending enough time searching the solution space and instead falls into local minima too quickly.

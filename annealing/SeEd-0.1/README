@@ -1,0 +1,81 @@
+Sequence Editor (SeEd) version 0.1
+
+ Copyright (c) 2008 Research Foundation of the State University of
+ New York. All rights reserved.
+
+Redistribution and use of the source code, with or without
+modification, are permitted provided that the following conditions are met:
+
+1.      Redistributions must reproduce the above copyright notice, this
+list of conditions and the following disclaimer in the  documentation
+and/or other materials provided with the distribution.  Redistributions of
+source code must also reproduce this information in the source code itself.
+
+2.      If the program is modified, redistributions must include a notice
+(in the same places as above) indicating that the redistributed program is
+not identical to the version distributed by the original creator.
+
+3.      The name of the original creator may not be used to endorse or
+promote products derived from this software without specific prior written
+permission.
+
+We also request that use of this software be cited in publications as
+
+   J. R. Coleman, D. Papamichail, S. Skiena, B. Futcher, E. Wimmer
+   and S. Mueller, "Virus attenuation by genome-scale changes in  
+   codon-pair bias: a general method for developing viral vaccines"
+   Science, ...
+   Code available at http://www.cs.miami.edu/~dimitris/SeEd-perl/.
+
+THIS SOFTWARE IS PROVIDED BY THE ORIGINAL AUTHOR ``AS IS'' AND  ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE  IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE  ARE
+DISCLAIMED. IN NO EVENT SHALL THE ORIGINAL AUTHOR BE LIABLE  FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL  DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS  OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)  HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGE.
+
+
+
+INSTRUCTIONS
+------------
+
+  This perl script can be used to design sequences with altered codon pair
+bias, while conforming to a specific codon distribution. It provides flexibility
+to define the coding regions, lock sequence locations from any alteration and
+eliminate given restriction sites. It uses simulated annealing to optimize the
+codon pair score and accepts a parameter for the number of iterations of the
+algorithm.
+
+  All necessary files to run the program are contained in the SeEd.tar.gz file.
+After extraction, 'data' and 'output' directories will be created automatically.
+All the parameters this program accepts will be presented when the script is
+run with no parameters or the wrong number of mandatory arguments.
+
+  Sample files are provided in the data directory. These include the wildtype
+polio virus, a coding regions file that specifies the P1 region, a file
+containing enzymes to be eliminated and a file that specifies regions to
+be locked. An example command to run on these sample files is given in the
+'sample_command' text file. All files provided are in ASCII text and can be 
+viewed with any text editor.
+
+  Statistics files will be generated in the 'output' directory, which should
+always exist, where the output sequences are generated in the STDOUT of the
+program, unless otherwise specified with a parameter. Both minimized and
+maximized codon pair sequences are generated at the same time.
+
+  The codon pair score indicates the aggregation over all codon pairs. In order
+to derive the normalized score, one has to divide by the total number of 
+codons in the coding regions used.
+
+
+SYSTEM REQUIREMENTS
+-------------------
+
+  The program has been succesfully run in a variety of linux platforms.
+It assumes the availability of a perl interpreter and has been run and tested
+with perl interpreters available after 2003.

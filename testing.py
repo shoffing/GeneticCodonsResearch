@@ -3,9 +3,30 @@ import random
 import math
 import copy
 import sys
+import os
 import time
 import Gnuplot, Gnuplot.funcutils
 import cProfile
+
+
+# TARGET POLIO SCORE: -461.162930852
+
+
+inputFile = 'seq_polio'
+
+
+NUM_GENS = 120000 # Generations
+NUM_SOLS_PER_GEN = 50 # solutions per generation
+SELECTION_RATIO_START = 0.2 # percentage of solutions selected between each generation
+SELECTION_RATIO_END   = 0.04
+NUM_CROSSPOINTS = 1 # crossover points
+MUTATION_AMOUNT_START = 0.030 # Mutate everything by a bit
+MUTATION_AMOUNT_END   = 0.001
+DYNAMIC_PARAM_INTERP = 0.5 # specify the interpolation mode (raises the completion ratio to this power)
+
+
+outputFileName = sys.argv[1] if len(sys.argv) > 1 else ','.join(map(str,[NUM_GENS,NUM_SOLS_PER_GEN,SELECTION_RATIO_START,SELECTION_RATIO_END,NUM_CROSSPOINTS,MUTATION_AMOUNT_START,MUTATION_AMOUNT_END]))
+
 
 #=========
 # Loading
@@ -40,7 +61,7 @@ with open('input_codon_scores', 'r') as f:
 
 # Load the example DNA sequence, store initial sequence for comparison later
 initSeq = []
-with open('seq_gfp', 'r') as f:
+with open(inputFile, 'r') as f:
     next(f)
     for line in f:
         line = line.rstrip('\n')
@@ -54,6 +75,7 @@ with open('seq_gfp', 'r') as f:
                     probInfo['visits'][codon] = probInfo['visits'][codon] + 1 if (codon in probInfo['visits']) else 1
                 else:
                     break
+
 
 
 #===================
@@ -191,41 +213,44 @@ def calcScore(solution):
 # Testing
 #==========
 
-NUM_GENS = 100000 # Generations
-NUM_SOLS_PER_GEN = 10 # solutions per generation
-NUM_CROSSPOINTS = 2 # crossover points
-NUM_SELECTIONS = int(round(0.3 * NUM_SOLS_PER_GEN)) # Top solutions survive each generation
-NUM_CHILDREN = int(round(0.6 * NUM_SOLS_PER_GEN)) # children are created from those
-NUM_RANDOM = NUM_SOLS_PER_GEN - (NUM_SELECTIONS + NUM_CHILDREN) # random solutions fill in the gaps
-MUTATION_AMOUNT = 0.012 # Mutate everything that we bring over a bit
-NUM_PRESERVE = 1 # Prevent the algorithm from mutating the best-performing solution(s). While unrealistic, it prevents us from going backwards.
-
-
 # Create a new generation given a previous one
-def newGeneration(pool):
-    sortedPool = sorted(pool, key=calcScore)
-    
-    # Selection - Bring in the best performers
-    newGen = sortedPool[:NUM_SELECTIONS]
+def newGeneration(pool, progressRatio):
+    # Dynamic parameters
+    SELECTION_RATIO = interp(progressRatio, [0,1], [SELECTION_RATIO_START, SELECTION_RATIO_END])
+    MUTATION_AMOUNT = interp(progressRatio, [0,1], [MUTATION_AMOUNT_START, MUTATION_AMOUNT_END])
 
-    # Crossover - Breed the top performers
-    for i in range(NUM_CHILDREN):
+    # Tournament selection - split the pool into groups of (1 / SELCTION_RATIO), select best one from each group
+    groups = []
+    while len(pool) > 0:
+        group = []
+        for i in range(min(int(1 / SELECTION_RATIO), len(pool))):
+            randInd = int(random.random() * len(pool))
+            group.append(pool[randInd])
+            pool.pop(randInd)
+
+        groups.append(group)
+
+    selected = []
+    for grp in groups:
+        selected.append(sorted(grp, key=calcScore)[0])
+
+
+    # Crossover - Breed the selected solutions into new generation
+    newGen = []
+    for i in range(NUM_SOLS_PER_GEN):
         # Select 2 random parents
-        ai = int(random.random() * len(newGen))
-        bi = int(random.random() * len(newGen))
+        ai = int(random.random() * len(selected))
+        bi = int(random.random() * len(selected))
         if ai == bi:
-            bi = (bi + 1) % len(newGen)
+            bi = (bi + 1) % len(selected)
 
-        a = newGen[ai]
-        b = newGen[bi]
+        a = selected[ai]
+        b = selected[bi]
 
         newGen.append(crossover(a, b, NUM_CROSSPOINTS, probInfo))
 
     # Mutation
-    newGen[NUM_PRESERVE:] = map(mutate, newGen[NUM_PRESERVE:], [MUTATION_AMOUNT] * len(newGen[NUM_PRESERVE:]), [probInfo] * len(newGen[NUM_PRESERVE:]))
-
-    # Random new solutions to fill the gap
-    newGen.extend([generateRandomSolution(probInfo) for x in range(NUM_RANDOM)])
+    newGen = map(mutate, newGen, [MUTATION_AMOUNT] * len(newGen), [probInfo] * len(newGen))
 
     return newGen
 
@@ -251,7 +276,7 @@ def doTest():
         sys.stdout.write('\rComplete: %g%%' % round(100 * (i+1) / float(NUM_GENS), 2) + (' '*6))
         sys.stdout.flush()
 
-        pool = newGeneration(pool)
+        pool = newGeneration(pool, pow((i + 1) / float(NUM_GENS), DYNAMIC_PARAM_INTERP))
 
         # Save best solution
         curBestSolution = sorted(pool, key=calcScore)[0]
@@ -269,27 +294,23 @@ def doTest():
     # Output
     #=========
 
-    print '\n' + str(NUM_GENS) + ' generations in ' + str(round(end - start, 2)) + ' seconds [' + str(round(NUM_GENS / (end-start), 1)) + ' generations per second]'
+    print('\n' + str(NUM_GENS) + ' generations in ' + str(round(end - start, 2)) + ' seconds [' + str(round(NUM_GENS / (end-start), 1)) + ' GPS], Best: ' + str(calcScore(bestSolution)))
 
-    outputFileName = ', '.join(map(str,[NUM_GENS,NUM_SOLS_PER_GEN,NUM_CROSSPOINTS,NUM_SELECTIONS,NUM_CHILDREN,NUM_RANDOM,MUTATION_AMOUNT,NUM_PRESERVE]))
+    if not os.path.exists(os.path.dirname('output/' + outputFileName)):
+        os.makedirs(os.path.dirname('output/' + outputFileName))
 
     # Outputting to text file
     with open('output/' + outputFileName + '.txt', 'w') as f:
         f.write('Best sequence [' + str(calcScore(bestSolution)) + ']:\n' + ''.join(bestSolution) + '\n\n')
         f.write('Initial sequence [' + str(calcScore(initSeq)) + ']:\n' + ''.join(initSeq) + '\n\n')
 
-        #f.write('Gen\tAvg\tBest\n')
-        #for i in range(NUM_GENS + 1):
-        #    f.write(str(i) + '\t' + str(averageScores[i]) + '\t' + str(bestScores[i]) + '\n')
-
 
     # Graphing with Gnuplot
     g = Gnuplot.Gnuplot(debug=0, persist=0)
-    g.title('GA Performance [' + ', '.join(map(str,[NUM_GENS,NUM_SOLS_PER_GEN,NUM_CROSSPOINTS,NUM_SELECTIONS,NUM_CHILDREN,NUM_RANDOM,MUTATION_AMOUNT,NUM_PRESERVE])) + ']')
+    g.title('GA Performance [' + outputFileName + ']')
     g('set xlabel "Generation #"')
     g('set ylabel "Score"')
-    g('set xrange [:' + str(NUM_GENS) + ']')
-    g('set yrange [-70:0]')
+    #g('set yrange [-280:-80]')
     g('set logscale x')
 
     g('set terminal png')
@@ -304,9 +325,15 @@ def doTest():
 
     g.close()
 
+    # time.sleep(5)
 
     raw_input('Please press return to continue...\n')
 
 
 # Profiling
-cProfile.run('doTest()')
+#cProfile.run('doTest()')
+
+#for i in range(5):
+#    doTest(i)
+
+doTest()

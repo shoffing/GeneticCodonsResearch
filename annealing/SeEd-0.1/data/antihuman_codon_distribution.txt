@@ -1,0 +1,79 @@
+Gly     GGG    0.00     0      0.00
+Gly     GGA    0.00     0      0.00
+Gly     GGT    0.00     0      1.00
+Gly     GGC    0.00     0      0.00
+ 
+Glu     GAG    0.00     0      0.00
+Glu     GAA    0.00     0      1.00
+Asp     GAT    0.00     0      1.00
+Asp     GAC    0.00     0      0.00
+ 
+Val     GTG    0.00     0      0.00
+Val     GTA    0.00     0      1.00
+Val     GTT    0.00     0      0.00
+Val     GTC    0.00     0      0.00
+ 
+Ala     GCG    0.00     0      1.00
+Ala     GCA    0.00     0      0.00
+Ala     GCT    0.00     0      0.00
+Ala     GCC    0.00     0      0.00
+ 
+Arg     AGG    0.00     0      0.00
+Arg     AGA    0.00     0      0.00
+Ser     AGT    0.00     0      0.00
+Ser     AGC    0.00     0      0.00
+ 
+Lys     AAG    0.00     0      0.00
+Lys     AAA    0.00     0      1.00
+Asn     AAT    0.00     0      1.00
+Asn     AAC    0.00     0      0.00
+ 
+Met     ATG    0.00     0      1.00
+Ile     ATA    0.00     0      1.00
+Ile     ATT    0.00     0      0.00
+Ile     ATC    0.00     0      0.00
+ 
+Thr     ACG    0.00     0      1.00
+Thr     ACA    0.00     0      0.00
+Thr     ACT    0.00     0      0.00
+Thr     ACC    0.00     0      0.00
+ 
+Trp     TGG    0.00     0      1.00
+End     TGA    0.00     0      0.00
+Cys     TGT    0.00     0      1.00
+Cys     TGC    0.00     0      0.00
+ 
+End     TAG    0.00     0      0.00
+End     TAA    0.00     0      1.00
+Tyr     TAT    0.00     0      1.00
+Tyr     TAC    0.00     0      0.00
+ 
+Leu     TTG    0.00     0      0.00
+Leu     TTA    0.00     0      0.00
+Phe     TTT    0.00     0      1.00
+Phe     TTC    0.00     0      0.00
+ 
+Ser     TCG    0.00     0      1.00
+Ser     TCA    0.00     0      0.00
+Ser     TCT    0.00     0      0.00
+Ser     TCC    0.00     0      0.00
+ 
+Arg     CGG    0.00     0      0.00
+Arg     CGA    0.00     0      0.00
+Arg     CGT    0.00     0      1.00
+Arg     CGC    0.00     0      0.00
+ 
+Gln     CAG    0.00     0      0.00
+Gln     CAA    0.00     0      1.00
+His     CAT    0.00     0      1.00
+His     CAC    0.00     0      0.00
+ 
+Leu     CTG    0.00     0      0.00
+Leu     CTA    0.00     0      1.00
+Leu     CTT    0.00     0      0.00
+Leu     CTC    0.00     0      0.00
+ 
+Pro     CCG    0.00     0      1.00
+Pro     CCA    0.00     0      0.00
+Pro     CCT    0.00     0      0.00
+Pro     CCC    0.00     0      0.00
